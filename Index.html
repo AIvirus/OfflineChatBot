@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Chat</title>
+
+    <script lang="javascript">
+      let messages = [];
+      function displayMessages() {
+          const chatContainer = document.getElementById("chatContainer");
+
+          chatContainer.innerHTML = messages.map((message) => `
+      <div class="chatBubble">
+                <h4>${message.user}</h4>
+                <p>${message.message}</p>
+            </div>`      
+            );
+      }
+
+      function addToMessages(msg, user) {
+          messages = [...messages, {message: msg, user: user}];
+          displayMessages();
+      }
+
+      function sendToAI(msg) {
+          fetch("http://localhost:11434/api/generate", {
+            method: "POST",
+            body: JSON.stringify({
+                "model": "mistral",
+                "prompt": msg,
+                "stream": false,
+            })
+          }).then((res) => {
+             return res.json();
+          }).then(json => {
+             addToMessages(json.response, "AI");
+          }).catch((err) => console.log("Error", err));
+      }
+
+      function send() {
+          const msgInput = document.getElementById("message");
+          const msg = msgInput.value;
+          msgInput.value = "";
+          addToMessages(msg, "Me");
+          sendToAI(msg);
+      }
+    </script>
+
+    <style>
+      .chatContainer {
+        margin-bottom: 10vh;
+      }
+      .chatBubble {
+        background-color: antiquewhite;
+        border-radius: 6px;
+        width: 40vw;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>My Chat</h1>
+    <div class="container">
+
+      <div class="chatContainer" id="chatContainer">
+      </div>
+
+      <div class="inputBar">
+        <textarea
+          type="text"
+          name="message"
+          id="message"
+          placeholder="Write your message..."
+        ></textarea>
+        <button onclick="send()">Send</button>
+      </div>
+    </div>
+  </body>
+</html>
